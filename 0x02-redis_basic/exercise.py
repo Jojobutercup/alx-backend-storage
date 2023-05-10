@@ -31,3 +31,4 @@ class Cache:
         key: str = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
+
