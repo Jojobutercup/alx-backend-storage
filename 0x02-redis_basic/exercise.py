@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-A module that defines a Cache class that uses Redis for storage.
+Cache module
 """
 
 import redis
@@ -9,26 +9,22 @@ from typing import Union
 
 class Cache:
     """
-    A class that represents a cache that uses Redis for storage.
+    Cache class
     """
-    def __init__(self) -> None:
+
+    def __init__(self):
         """
-        Initializes a new instance of the Cache class and flushes the Redis instance.
+        Constructor method
         """
-        self._redis: redis.Redis = redis.Redis()
+        self._redis = redis.Redis()
         self._redis.flushdb()
 
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
-        Stores the input data in Redis using a generated key and returns the key.
-
-        Args:
-            data: The data to be stored. Can be a string, bytes, int or float.
-
-        Returns:
-            A string representing the generated key used to store the data in Redis.
+        Store input data in Redis using a random key
         """
-        key: str = str(uuid.uuid4())
+        key = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
+
 
