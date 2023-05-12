@@ -4,7 +4,6 @@
 Cache module
 """
 
-import random
 import redis
 import uuid
 from typing import Callable, Optional, Union
@@ -92,7 +91,6 @@ class Cache:
         """
         return self.get(key, fn=lambda x: int(x))
 
-
 if __name__ == '__main__':
     Cache = Cache()
 
@@ -106,6 +104,6 @@ if __name__ == '__main__':
     inputs = Cache._redis.lrange(f"{Cache.store.__qualname__}:inputs", 0, -1)
     outputs = Cache._redis.lrange(f"{Cache.store.__qualname__}:outputs", 0, -1)
 
-    print("inputs:", inputs)
-    print("outputs:", outputs)
+    print(f"inputs: {inputs}")
+    print(f"outputs: {outputs}")
 
