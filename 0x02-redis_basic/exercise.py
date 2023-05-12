@@ -1,81 +1,69 @@
 #!/usr/bin/env python3
 """
-Cache module
+Module that defines a Cache class that uses Redis as a backend
 """
+
 import redis
 import uuid
-from typing import Any, Callable, Optional, Union
+from typing import Callable, Optional, Union
+from functools import wraps
+
+
+def count_calls(method: Callable) -> Callable:
+    """
+    Decorator that increments a key counter every time the method is called.
+    The key is the qualified name of the method.
+    """
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        key = method.__qualname__
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+    return wrapper
 
 
 class Cache:
     """
-    Cache class that uses Redis to store data.
+    A Cache class that uses Redis as a backend
     """
-
     def __init__(self) -> None:
-        """
-        Constructor that initializes the Redis client and flushes the instance.
-        """
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
-        Generates a random key and stores the input data in Redis using the random key.
-
-        Args:
-            data: The data to be stored. Can be a str, bytes, int or float.
-
-        Returns:
-            The generated key as a str.
+        Stores the input data in Redis using a generated random key.
+        Returns the key as a string.
         """
         key = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
 
-    def get(self, key: str, fn: Optional[Callable[[Any], Any]] = None) -> Union[str, bytes, int, float, None]:
+    def get(self, key: str, fn: Optional[Callable] = None) -> Union[str, bytes, int, float, None]:
         """
-        Retrieves the data from Redis for the given key and applies the optional conversion function.
-
-        Args:
-            key: The key of the data to be retrieved.
-            fn: An optional callable that will be used to convert the data back to the desired format.
-
-        Returns:
-            The retrieved data, optionally converted to the desired format.
-            Returns None if the key does not exist.
+        Retrieves the data associated with the input key from Redis.
+        If fn is provided, applies fn to the data before returning.
+        Returns None if the key is not found.
         """
         data = self._redis.get(key)
         if data is None:
             return None
         if fn is not None:
-            data = fn(data)
+            return fn(data)
         return data
 
     def get_str(self, key: str) -> Optional[str]:
         """
-        Retrieves the data from Redis for the given key as a string.
-
-        Args:
-            key: The key of the data to be retrieved.
-
-        Returns:
-            The retrieved data as a string.
-            Returns None if the key does not exist.
+        Returns the string value associated with the input key from Redis.
+        Returns None if the key is not found.
         """
-        return self.get(key, fn=lambda x: x.decode("utf-8"))
+        return self.get(key, fn=lambda d: d.decode("utf-8"))
 
     def get_int(self, key: str) -> Optional[int]:
         """
-        Retrieves the data from Redis for the given key as an integer.
-
-        Args:
-            key: The key of the data to be retrieved.
-
-        Returns:
-            The retrieved data as an integer.
-            Returns None if the key does not exist.
+        Returns the integer value associated with the input key from Redis.
+        Returns None if the key is not found.
         """
         return self.get(key, fn=int)
-
 
