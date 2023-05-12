@@ -1,69 +1,65 @@
 #!/usr/bin/env python3
 """
-Module that defines a Cache class that uses Redis as a backend
+Redis exercise module
 """
 
-import redis
 import uuid
-from typing import Callable, Optional, Union
-from functools import wraps
-
-
-def count_calls(method: Callable) -> Callable:
-    """
-    Decorator that increments a key counter every time the method is called.
-    The key is the qualified name of the method.
-    """
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        key = method.__qualname__
-        self._redis.incr(key)
-        return method(self, *args, **kwargs)
-    return wrapper
+import redis
+from typing import Callable, List
 
 
 class Cache:
     """
-    A Cache class that uses Redis as a backend
+    Cache class
     """
-    def __init__(self) -> None:
+
+    def __init__(self):
+        """
+        Constructor
+        """
         self._redis = redis.Redis()
         self._redis.flushdb()
 
-    @count_calls
-    def store(self, data: Union[str, bytes, int, float]) -> str:
+    @staticmethod
+    def _generate_key() -> str:
         """
-        Stores the input data in Redis using a generated random key.
-        Returns the key as a string.
+        Generates a unique key
         """
-        key = str(uuid.uuid4())
-        self._redis.set(key, data)
+        return str(uuid.uuid4())
+
+    @staticmethod
+    def call_history(method: Callable) -> Callable:
+        """
+        Decorator to store inputs and outputs history of a function
+        """
+        def wrapper(self, *args, **kwargs):
+            inputs_key = f"{method.__qualname__}:inputs"
+            outputs_key = f"{method.__qualname__}:outputs"
+
+            # Append input to the inputs key
+            self._redis.rpush(inputs_key, str(args))
+
+            # Execute the function and store the output
+            output = method(self, *args, **kwargs)
+            self._redis.rpush(outputs_key, output)
+
+            return output
+
+        return wrapper
+
+    @call_history
+    def store(self, value: str) -> str:
+        """
+        Store a value in the cache
+        """
+        key = self._generate_key()
+        self._redis.set(key, value)
         return key
 
-    def get(self, key: str, fn: Optional[Callable] = None) -> Union[str, bytes, int, float, None]:
+    def get(self, key: str) -> str:
         """
-        Retrieves the data associated with the input key from Redis.
-        If fn is provided, applies fn to the data before returning.
-        Returns None if the key is not found.
+        Retrieve a value from the cache
         """
-        data = self._redis.get(key)
-        if data is None:
-            return None
-        if fn is not None:
-            return fn(data)
-        return data
+        return self._redis.get(key)
 
-    def get_str(self, key: str) -> Optional[str]:
-        """
-        Returns the string value associated with the input key from Redis.
-        Returns None if the key is not found.
-        """
-        return self.get(key, fn=lambda d: d.decode("utf-8"))
-
-    def get_int(self, key: str) -> Optional[int]:
-        """
-        Returns the integer value associated with the input key from Redis.
-        Returns None if the key is not found.
-        """
-        return self.get(key, fn=int)
 
