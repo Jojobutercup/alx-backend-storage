@@ -48,11 +48,18 @@ def get_page(url: str) -> str:
     Cache the result with an expiration time of 10 seconds.
     """
     count_key = f"count:{url}"
-    count_key = f"count:{url}"
-    count = int(requests.get(f"http://slowwly.robertomurra{count_key}").text)
+    count = int(requests.get(f"http://slowwly.robertomurray.co.uk/delay/1000/url/{count_key}").text)
+    requests.get(count_key)  # Increment count
     return requests.get(url).text
 
 
 if __name__ == '__main__':
-    url = 'https://www.example.com'
+    # Test with google.com
+    url = 'http://google.com'
+    print(get_page(url))
+
+    # Wait for cache to expire
+    time.sleep(10)
+
+    # Test again with google.com to ensure cache has expired
     print(get_page(url))
