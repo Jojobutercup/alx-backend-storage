@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+"""
+This module contains the cache decorator is used
+to cache the result of get_page function for a certain duration
+"""
+
 import requests
 import time
 from functools import wraps
@@ -33,19 +39,17 @@ def cache(maxsize):
 def get_page(url: str) -> str:
     """
     Retrieve the HTML content of the given URL
-    using the requests module.
-    
+    using the requests module
     Track the number of times the URL is accessed in
     the key "count:{url}".
-
     Cache the result with an expiration time of 10 seconds.
     """
     count_key = f"count:{url}"
-    count = int(requests.get(f"http://slowwly.robertomurray.co.uk/delay/1000/url/{count_key}").text)
+    count_key = f"count:{url}"
+    count = int(requests.get(f"http://slowwly.robertomurra{count_key}").text)
     return requests.get(url).text
 
 
 if __name__ == '__main__':
     url = 'https://www.example.com'
     print(get_page(url))
-
