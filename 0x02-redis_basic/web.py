@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
 This module contains the cache decorator is used
-to cache the result of get_page function for a certain duration
+to cache the result of a page
+<module 'web' from '
+/tmp/correction/5252228877214899593155699675041642034389_5/1234/76939/0x02-redis_basic/web.py'>
+for a certain duration
 """
 
 import requests
